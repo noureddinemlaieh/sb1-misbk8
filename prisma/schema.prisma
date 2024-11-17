@@ -1,0 +1,181 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  team          Team?     @relation(fields: [teamId], references: [id])
+  teamId        String?
+  leads         Lead[]
+  opportunities Opportunity[]
+  appointments  Appointment[]
+  messages      Message[]
+  documents     Document[]
+  tasks         Task[]
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  members   User[]
+  manager   User     @relation("TeamManager", fields: [managerId], references: [id])
+  managerId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id            String        @id @default(cuid())
+  name          String
+  email         String
+  phone         String?
+  address       String?
+  opportunities Opportunity[]
+  appointments  Appointment[]
+  invoices      Invoice[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Lead {
+  id           String    @id @default(cuid())
+  name         String
+  email        String
+  phone        String?
+  status       LeadStatus
+  source       String?
+  assignedTo   User      @relation(fields: [userId], references: [id])
+  userId       String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Opportunity {
+  id          String    @id @default(cuid())
+  title       String
+  value       Float
+  status      OpportunityStatus
+  client      Client    @relation(fields: [clientId], references: [id])
+  clientId    String
+  assignedTo  User      @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Appointment {
+  id          String    @id @default(cuid())
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  description String?
+  client      Client    @relation(fields: [clientId], references: [id])
+  clientId    String
+  assignedTo  User      @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Invoice {
+  id          String    @id @default(cuid())
+  number      String    @unique
+  amount      Float
+  status      InvoiceStatus
+  dueDate     DateTime
+  client      Client    @relation(fields: [clientId], references: [id])
+  clientId    String
+  items       InvoiceItem[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model InvoiceItem {
+  id          String    @id @default(cuid())
+  description String
+  quantity    Int
+  unitPrice   Float
+  invoice     Invoice   @relation(fields: [invoiceId], references: [id])
+  invoiceId   String
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  content   String
+  sender    User      @relation(fields: [senderId], references: [id])
+  senderId  String
+  createdAt DateTime  @default(now())
+}
+
+model Document {
+  id        String    @id @default(cuid())
+  name      String
+  type      String
+  url       String
+  owner     User      @relation(fields: [ownerId], references: [id])
+  ownerId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus
+  dueDate     DateTime?
+  assignedTo  User      @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  CONVERTED
+  LOST
+}
+
+enum OpportunityStatus {
+  NEW
+  MEETING_SCHEDULED
+  PROPOSAL_SENT
+  NEGOTIATION
+  WON
+  LOST
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
